@@ -20,14 +20,14 @@ class PoseNDF_trainer(object):
         if opt['model']['StrEnc']['use']:
             self.enc_name = opt['model']['StrEnc']['name']
         self.train_dataset = PoseData('train', data_path=opt['data']['data_dir'],  batch_size=opt['train']['batch_size'], num_workers=opt['train']['num_worker'])
-        self.val_dataset = PoseData('train', data_path=opt['data']['data_dir'],  batch_size=opt['train']['batch_size'], num_workers=opt['train']['num_worker'])
+        self.val_dataset = PoseData('test', data_path=opt['data']['data_dir'],  batch_size=opt['train']['batch_size'], num_workers=opt['train']['num_worker'])
         self.train_dataset  = self.train_dataset.get_loader()
         self.val_dataset  = self.val_dataset.get_loader()
         # create all the models and dataloader:
         self.learning_rate = opt['train']['optimizer_param']
         self.model = PoseNDF(opt).to(self.device)
         self.optimizer = torch.optim.Adam( self.model.parameters(), lr=self.learning_rate)
-        ipdb.set_trace()
+        # ipdb.set_trace()
         ##create smpl layer
         self.init_net(opt)
         self.ep = 0
@@ -48,7 +48,7 @@ class PoseNDF_trainer(object):
         self.exp_name = opt['experiment']['exp_name']
         self.loss = opt['train']['loss_type']
 
-        self.exp_name = '{}_{}_{}_{}'.format(self.exp_name,  opt['model']['DFNet']['act'],self.loss,  opt['train']['optimizer_param'])
+        self.exp_name = '{}_{}_{}_{}'.format(self.exp_name,  opt['model']['CanSDF']['act'],self.loss,  opt['train']['optimizer_param'])
         self.exp_path = '{}/{}/'.format( opt['experiment']['root_dir'],self.exp_name )
         self.checkpoint_path = self.exp_path + 'checkpoints/'
         if not os.path.exists(self.checkpoint_path):
@@ -81,7 +81,7 @@ class PoseNDF_trainer(object):
         
         for i, inputs in enumerate(self.train_dataset):
             self.optimizer.zero_grad()
-            loss_dict, _ = self.model(inputs)
+            _, loss_dict = self.model(inputs)
             loss = 0.0
             for k in loss_dict.keys():
                 loss += self.loss_weight[k]*loss_dict[k]
@@ -104,8 +104,8 @@ class PoseNDF_trainer(object):
         out_path = os.path.join(self.exp_path, 'latest_{}'.format(epoch))
         os.makedirs(out_path, exist_ok=True)
         for batch in val_data_loader:
-            loss_dict, output= self.model(batch)
-            sum_val_loss += loss_dict['data'].item()
+            loss, output= self.model(batch)
+            sum_val_loss += loss.item()
         val_loss =  sum_val_loss /len(val_data_loader)
         self.writer.add_scalar("validation_test/epoch", val_loss, epoch)
 
@@ -151,7 +151,7 @@ class PoseNDF_trainer(object):
         # checkpoints = np.array(checkpoints, dtype=int)
         # checkpoints = np.sort(checkpoints)
         # path = self.checkpoint_path + 'checkpoint_epoch_{}.tar'.format(checkpoints[-1])
-        path = self.checkpoint_path + 'checkpoint_epoch_best.tar'
+        path = self.checkpoint_path + 'checkpoint_latest.tar'
 
         print('Loaded checkpoint from: {}'.format(path))
         checkpoint = torch.load(path)
@@ -159,6 +159,7 @@ class PoseNDF_trainer(object):
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
         epoch = checkpoint['epoch']
+        # ipdb.set_trace()
         return epoch
 
     

@@ -27,7 +27,7 @@ class PoseNDF(torch.nn.Module):
         if opt['model']['StrEnc']['use']:
             self.enc = StructureEncoder(opt['model']['StrEnc']).to(self.device)
 
-        self.dfnet = DFNet(opt['model']['DFNet']).to(self.device)
+        self.dfnet = DFNet(opt['model']['CanSDF']).to(self.device)
         
         
         #geo_weights = np.load(os.path.join(DATA_DIR, 'real_g5_geo_weights.npy'))  todo: do we need this???
@@ -52,13 +52,18 @@ class PoseNDF(torch.nn.Module):
         return dist_vals
 
     def forward(self, inputs ):
-        pose = inputs['pose'].to(device=self.device)
-        dist_gt = inputs['dist'].to(device=self.device)
+        pose = inputs['pose'].to(device=self.device) # (B,5*num_sample,21,4) num_samples是prepare_traindata中的采样数
+        # ipdb.set_trace() 
+        dist_gt = inputs['dist'].to(device=self.device) # [B,5*num_sample, 5(k_dist)] (2,1000,5)
         rand_pose_in = torch.nn.functional.normalize(pose.to(device=self.device),dim=2)
         if self.enc:
-            rand_pose_in = self.enc(rand_pose_in.reshape(self.batch_size,84))
-        dist_pred = self.dfnet(rand_pose_in.reshape(self.batch_size,84))
-        loss = self.loss_l1(dist_pred[:,0], dist_gt)
+            rand_pose_in = self.enc(rand_pose_in.reshape(pose.shape[0],-1,84)) # (B*5*num_sample, 126)
+            # ipdb.set_trace() 
+        dist_pred = self.dfnet(rand_pose_in.reshape(-1,126)) #[B,5*num_sample, 1]
+        # ipdb.set_trace() 
+        loss = self.loss_l1(dist_pred, dist_gt[:,:,0].reshape(-1,1)) # 84的时候需要dist_pred.squeeze()
+
+        # ipdb.set_trace() 
         return loss, {'dist': loss }
 
 

@@ -16,16 +16,17 @@ class PoseData(Dataset):
         self.path = data_path
         self.sigma = sigma
         self.data_samples = amass_splits[self.mode]
-        self.data_files = glob.glob(self.path+ '/*/*.npz')
+        self.data_files = glob.glob(self.path+ '/*/*.npz') #['/media/xky/_data/project/posendf/train_posendf_data/ACCAD/Female1Gestures_c3d.npz', '/media/xky/_data/project/posendf/train_posendf_data/ACCAD/Female1General_c3d.npz']
         self.data_files = [ds for ds in self.data_files if ds.split('/')[-2] in self.data_samples]
         
         self.batch_size = batch_size
         self.num_workers = num_workers
+        # ipdb.set_trace()
 
     def __len__(self):
-        return len(self.data_files)
+        return len(self.data_files) 
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx): # 一个npz文件是一个item
 
         """read pose and distance data"""
         pose_data = np.load(self.data_files[idx])

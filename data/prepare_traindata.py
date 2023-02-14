@@ -111,20 +111,20 @@ def main(args):
     for query_batch in query_data_loader:
         quer_pose = query_batch.get('pose').to(device=device)[0]
         if args.data_type == 'np':
-            inp_pose = quer_pose.reshape(len(quer_pose),84).detach().cpu().numpy()
+            inp_pose = quer_pose.reshape(len(quer_pose),84).detach().cpu().numpy() #(num_sample*5, 84)
         else:
             inp_pose= quer_pose.reshape(len(quer_pose), 84)
 
         #for every query pose fine knn using faiss and then calculate exact enighbous using custom distance
-        distances, neighbors = faiss_model.search(inp_pose, k_faiss)
-        ipdb.set_trace()
+        distances, neighbors = faiss_model.search(inp_pose, k_faiss) # inp_pose是加了噪音的待检索向量(50000, 84)，index是gt pose封装成的库，
+        # ipdb.set_trace() # neighbors是每个待检索query最相似的topk（k_faiss）的索引list，distance是其对应的距离 neighbors:(50000, 500)
 
-        nn_poses = data_all[neighbors].reshape(len(quer_pose), k_faiss, 21,4)
+        nn_poses = data_all[neighbors].reshape(len(quer_pose), k_faiss, 21,4) # 距离inp_pose最近的gt pose(50000, 500, 21, 4)
         if args.data_type == 'np':
             nn_poses =  torch.from_numpy(nn_poses).to(device=device)
 
         dist, nn_id = distance_calculator.dist_calc(quer_pose,nn_poses, k_faiss, k_dist)
-        ipdb.set_trace()
+        # ipdb.set_trace()
 
         nn_id = nn_id.detach().cpu().numpy()
         nn_poses = nn_poses.detach().cpu().numpy()
@@ -190,12 +190,12 @@ if __name__ == "__main__":
                         default='BioMotionLab_NTroje/rub001.npz',
                         help="sequence file")
     # Rendering parameters
-    parser.add_argument("-n", "--num_samples", default=10000, type=int,
+    parser.add_argument("-n", "--num_samples", default=200, type=int,
                         help="Number of pose sampled from each sequence")
     parser.add_argument("-k", "--k_dist", default=5, type=int,
 
                         help="K nearest neighbour")
-    parser.add_argument("-kf", "--k_faiss", default=500, type=int,
+    parser.add_argument("-kf", "--k_faiss", default=10, type=int,
 
                         help="K nearest neighbour")
     parser.add_argument("-bs", "--batch_size", default=128, type=int,

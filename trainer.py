@@ -6,6 +6,7 @@ from configs.config import load_config
 from model.train_posendf import PoseNDF_trainer
 import shutil
 from data.data_splits import amass_splits
+import ipdb 
 
 def train(opt,config_file):
 
@@ -28,7 +29,7 @@ if __name__ == '__main__':
         description='Train PoseNDF.'
     )
     parser.add_argument('--config', '-c', default='configs/amass.yaml', type=str, help='Path to config file.')
-    parser.add_argument('--test', '-t', action="store_true")
+    parser.add_argument('--test', '-t', action="store_true") # 这个参数根本没用
     args = parser.parse_args()
 
     opt = load_config(args.config)

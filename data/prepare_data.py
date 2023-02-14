@@ -29,7 +29,7 @@ def main(args):
                 fp.write("\t {})".format(count) + "\n")
                 fp.write("\t\t\t")
                 fp.write(
-                    "python prepare_traindata.py --seq_file {}/{}".format(amass_data, seq) +
+                    "python prepare_traindata.py --seq_file {}/{} --raw_data {} --out_dir {}".format(amass_data, seq, args.raw_data, args.out_path) +
                      "& \n")
                 count += 1
                 fp.write("\t\t\t;;\n")

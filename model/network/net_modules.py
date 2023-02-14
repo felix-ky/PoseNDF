@@ -11,11 +11,10 @@ class DFNet(nn.Module):
     def __init__(self, opt, batch_size=4, use_gpu=0, layer='UpperClothes', weight_norm=True, activation='relu',
                 dropout=0.3, output_layer=None):
         super().__init__()
-        input_size = opt['in_dim']
-        hid_layer = opt['dims']
+        input_size = opt['in_dim'] #84 
+        hid_layer = opt['dims'] #[ 512, 512, 512, 512, 512, 512, 512 ]
         output_size = 1
-        dims = [input_size] + [d_hidden for d_hidden in hid_layer] + [output_size]
-
+        dims = [input_size] + [d_hidden for d_hidden in hid_layer] + [output_size] #[84, 512, 512, 512, 512, 512, 512, 512, 1]
         self.num_layers = len(dims)
 
         for l in range(0, self.num_layers - 1):
@@ -34,6 +33,7 @@ class DFNet(nn.Module):
 
 
         x = p.reshape(len(p), -1)
+        # x=p
 
         for l in range(0, self.num_layers - 1):
             lin = getattr(self, "lin" + str(l))

@@ -63,7 +63,7 @@ class PoseData(Dataset):
         # change axis angle to quaternion
         # return {'pose': seq_pose, 'sigma_val':self.sigma[idx] }
 
-        quat_pose = axis_angle_to_quaternion_np(seq_pose)
+        quat_pose = axis_angle_to_quaternion_np(seq_pose) # (nframe, 21, 4) 由于posendf的数据处理方式，会读入一个文件夹里所有motion的pose，帧数也是好几个motion加在一起的帧数
         quat_pose = quat_doublecover(quat_pose)   #Todo: do we need this here
 
         if self.mode == 'ref':
@@ -75,7 +75,7 @@ class PoseData(Dataset):
         samples_poses = []
         for sigma in self.sigma:
             indices = np.random.randint(0, len(quat_pose), self.num_samples)
-            sampled_pose = quat_pose[indices]
+            sampled_pose = quat_pose[indices] # (num_sample(10000), 21, 4)
             sampled_pose = sampled_pose +sigma*sampled_pose
             sampled_pose = sampled_pose / np.linalg.norm(sampled_pose, axis=2, keepdims=True)
             samples_poses.extend(sampled_pose)
